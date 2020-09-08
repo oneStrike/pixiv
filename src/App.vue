@@ -1,7 +1,14 @@
 <script>
 	export default {
 		onLaunch: function() {
+		  let self = this;
 			console.log('App Launch')
+      uni.getStorage({
+        key: 'sideBar',
+        success: function(res) {
+          self.$store.commit('setSideBarOptions',res.data)
+        }
+      })
 		},
 		onShow: function() {
 			console.log('App Show')

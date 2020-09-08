@@ -15,6 +15,5 @@ $head-h:90rpx;
 /*加载时的背景图*/
 .loading_bg{
   background: url('http://godkonws.com/image/loading.gif') no-repeat center center;
-  position: fixed !important;
-  top: 0;
+  background-size: cover;
 }

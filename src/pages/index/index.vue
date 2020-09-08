@@ -3,7 +3,7 @@
     <!--头部导航-->
     <view class="pixiv_head">
       <view class="head">
-        <view class="head1">
+        <view @click="isSideBar = true" class="head1">
           <image src="@/static/images/menu.svg"></image>
         </view>
         <navigator class="head_index head1"
@@ -33,29 +33,43 @@
     </view>
 
     <!--图片列表-->
-
     <view class="pixiv_list">
       <view class="list_container"
             v-show="activeSector === 'dailyList'">
-        <imageList :listData="dailyList.data"></imageList>
+        <imageList
+            :load="load"
+            :layout="layout"
+            :listData="dailyList.data"></imageList>
       </view>
       <view class="list_container"
             v-show="activeSector === 'weeklyList'">
-        <imageList :listData="weeklyList.data"></imageList>
+        <imageList
+            :load="load"
+            :layout="layout"
+            :listData="weeklyList.data"></imageList>
       </view>
       <view class="list_container"
             v-show="activeSector === 'monthlyList'">
-        <imageList :listData="monthlyList.data"></imageList>
+        <imageList
+            :load="load"
+            :layout="layout"
+            :listData="monthlyList.data"></imageList>
       </view>
     </view>
+
+    <!--侧边栏-->
+    <sideBar v-if="isSideBar" @hide-side="isSideBar = false"></sideBar>
+
   </view>
 </template>
 
 <script>
 import {pixiv} from '@/../api/api'
 import {utils} from '@/utils/utils'
+import {mapState} from 'vuex'
 
-import imageList from '@/components/common/imageList/imageList'
+import imageList from '@/components/common/imageList/imageList';
+import sideBar from '@/components/sideBar/sideBar';
 
 export default {
   data() {
@@ -65,20 +79,33 @@ export default {
       weeklyList: {data: [], pn: 1,},
       monthlyList: {data: [], pn: 1,},
       currentSector: {},
+      isSideBar: false
     }
+  },
+  computed:{
+    ...mapState({
+      load:state=>state.sideBarOptions.load,
+      layout:state=>state.sideBarOptions.layout,
+      floor:state=>state.sideBarOptions.floor,
+    })
   },
   async onLoad() {
     this.activeSector = 'dailyList'
   },
   async onReachBottom() {
     if (this.loading) return;
-    this.loading = true;
-    this[this.activeSector].data = this[this.activeSector].data.concat(await this.requestHomeData())
-    this.loading = false;
+    let data = await this.requestHomeData();
+    if(data.length){
+      this.loading = true;
+      this[this.activeSector].data = this[this.activeSector].data.concat(data)
+      this.loading = false;
+    }
   },
   methods: {
     /*切换展示的排行榜*/
     toggleSector(sector) {
+      /*防止在当前板块的请求数据没有返回前切换其他板块，隐藏uni.showLoading*/
+      uni.hideLoading();
       this.activeSector = sector;
       uni.pageScrollTo({
         scrollTop: 0,
@@ -127,7 +154,6 @@ export default {
     /*监视活跃的板块，并修改相应的数据*/
     async activeSector() {
       this.currentSector = this[this.activeSector];
-      console.log(this.currentSector);
       if (this.currentSector.data.length === 0) {
         this[this.activeSector].data = await this.requestHomeData()
         this.currentSector = this[this.activeSector];
@@ -135,7 +161,8 @@ export default {
     },
   },
   components: {
-    imageList
+    imageList,
+    sideBar
   },
 }
 </script>
@@ -213,4 +240,20 @@ export default {
     }
   }
 }
+
+/* #ifdef H5*/
+/*侧边栏的过度动画*/
+.side_bar-enter-active {
+  transition: all .3s;
+}
+.side_bar-leave-active {
+  transform: translateX(-10px);
+  opacity: 0;
+  transition: all .4s;
+}
+.side_bar-enter, .slide-fade-leave-to {
+  transform: translateX(10px);
+  opacity: 0;
+}
+/* #endif */
 </style>

@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import App from './App'
+import store from './vuex/store.js'
 
 Vue.config.productionTip = false
 Vue.filter('proxySrc',function(src){
@@ -9,6 +10,7 @@ Vue.filter('proxySrc',function(src){
 App.mpType = 'app'
 
 const app = new Vue({
-  ...App
+  ...App,
+  store
 })
 app.$mount()

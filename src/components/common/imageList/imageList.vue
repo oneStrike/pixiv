@@ -1,8 +1,14 @@
 <template>
   <view class="image_list">
     <view class="list_content"
-          v-for="img in listData" :key="img.id">
-      <image mode="aspectFill" :src="img.image_urls.medium | proxySrc"></image>
+          v-for="(img,imgIndex) in listData" :key="img.id"
+          :class="{'loading_bg':successImg.indexOf(imgIndex) === -1 &&load === 'full'}">
+      <image mode="aspectFill"
+             :lazy-load="true"
+             @load="successImg.push(imgIndex)"
+             :src="img.image_urls.medium | proxySrc"
+             :style="{opacity:successImg.indexOf(imgIndex) === -1&&load === 'full' ? '0' : '1'}">
+      </image>
       <view v-if="img.page_count > 1" class="img_count">
         <image src="@/static/images/image_count.svg"></image>
         <text>{{img.page_count}}</text>
@@ -14,13 +20,26 @@
 <script>
 export default {
   name: "imageList",
+  data() {
+    return {
+      successImg: [],
+    }
+  },
   props: {
     listData: {
       type: [Array, undefined],
       default: () => [],
       required: true,
+    },
+    load: {
+      type: String,
+      default: 'full',
+    },
+    layout: {
+      type: String,
+      default: 'flow'
     }
-  }
+  },
 }
 </script>
 
@@ -44,6 +63,7 @@ export default {
       width: 100%;
       height: 100%;
       vertical-align: middle;
+      transition: opacity 0.3s;
     }
 
     .img_count{
