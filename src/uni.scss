@@ -1,0 +1,20 @@
+/*项目主题颜色*/
+$main-color:#2cc8cd;
+
+/*字体大小*/
+$f-s-sm:24rpx;
+$f-s-base:28rpx;
+$f-s-bg:32rpx;
+
+/*图标大小*/
+$svg-size:48rpx;
+
+/*头部导航高度*/
+$head-h:90rpx;
+
+/*加载时的背景图*/
+.loading_bg{
+  background: url('http://godkonws.com/image/loading.gif') no-repeat center center;
+  position: fixed !important;
+  top: 0;
+}
