@@ -172,9 +172,7 @@ export default {
     if (this.loading) return;
     let data = await this.requestHomeData();
     if (data.length) {
-      this.loading = true;
       this[this.activeSector].data = this[this.activeSector].data.concat(data)
-      this.loading = false;
       this.$nextTick(async () => {
         await this.getFloorLayout()
         this.currentSector.layer++;
@@ -212,6 +210,7 @@ export default {
 
     /*请求首页数据*/
     async requestHomeData() {
+      this.loading = true;
       try {
         let mode;
         /*另一个接口*/
@@ -251,11 +250,13 @@ export default {
         })).response[0].works;*/
         /*请求成功但是数据为空手动抛出一个错误*/
         if (listData.length > 0) {
+          this.loading = false;
           return listData;
         } else {
           throw '数据获取失败'
         }
       } catch (e) {
+        this.loading = false;
         uni.showToast({
           title: e,
           duration: 2000,
