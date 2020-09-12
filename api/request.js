@@ -1,5 +1,5 @@
 const baseURL = 'https://api.imjad.cn/pixiv/v2/';
-
+// const baseURL = 'https://api.acg-gov.com/public/ranking';
 export default function request(url, data = {}, method = 'get', header,) {
   return new Promise((resolve, reject) => {
     uni.showLoading({
@@ -16,7 +16,7 @@ export default function request(url, data = {}, method = 'get', header,) {
         resolve(result.data);
         uni.hideLoading()
       },
-      fail: function (error) {
+      fail: function () {
         reject('数据请求失败');
         uni.hideLoading()
       }

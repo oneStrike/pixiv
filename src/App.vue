@@ -1,5 +1,8 @@
 <script>
 	export default {
+	  globalData:{
+	    imgMargin:0,
+    },
 		onLaunch: function() {
 		  let self = this;
 			console.log('App Launch')

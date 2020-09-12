@@ -170,7 +170,7 @@ button{
   top: 0;
   left: 0;
   background-color: rgba(181, 151, 151, 0.5);
-  z-index: 1;
+  z-index: 10;
   display: flex;
   justify-content:space-between;
   opacity: 0;
