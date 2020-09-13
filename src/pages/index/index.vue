@@ -34,80 +34,36 @@
 
     <!--图片列表-->
     <view class="pixiv_list">
-      <!--
-        小程序端是不支持 keep-alive的
-        使用 v-show的话imageList组件会被初始化三次
-        在小程序以外的平台使用v-if减少imageList的初始化次数，
-        使用keep-alive缓存组件，避免每次都被销毁重建
-        优化首屏的加载速度
-        不准确的测试小程序以外的平台可以节省100ms
-      -->
-
-      <!-- #ifdef MP-->
-      <view class="list_container"
-            v-show="activeSector === 'dailyList'">
+      <view class="list_container">
         <imageList
+            v-show="activeSector === 'dailyList'"
             @image-cilck="navImageDetail"
             :mark="activeSector"
             :load="load"
             :layout="layout"
-            :listData="dailyList.data"></imageList>
+            :listData="dailyList.data">
+        </imageList>
       </view>
-      <view class="list_container"
-            v-show="activeSector === 'weeklyList'">
+      <view class="list_container">
         <imageList
+            v-show="activeSector === 'weeklyList'"
             @image-cilck="navImageDetail"
             :mark="activeSector"
             :load="load"
             :layout="layout"
-            :listData="weeklyList.data"></imageList>
+            :listData="weeklyList.data">
+        </imageList>
       </view>
-      <view class="list_container"
-            v-show="activeSector === 'monthlyList'">
+      <view class="list_container">
         <imageList
+            v-show="activeSector === 'monthlyList'"
             @image-cilck="navImageDetail"
             :mark="activeSector"
             :load="load"
             :layout="layout"
-            :listData="monthlyList.data"></imageList>
+            :listData="monthlyList.data">
+        </imageList>
       </view>
-      <!-- #endif -->
-
-      <!-- #ifndef MP-->
-      <keep-alive>
-        <view class="list_container"
-              v-if="activeSector === 'dailyList'">
-          <imageList
-              @image-cilck="navImageDetail"
-              :mark="activeSector"
-              :load="load"
-              :layout="layout"
-              :listData="dailyList.data"></imageList>
-        </view>
-      </keep-alive>
-      <keep-alive>
-        <view class="list_container"
-              v-if="activeSector === 'weeklyList'">
-          <imageList
-              @image-cilck="navImageDetail"
-              :mark="activeSector"
-              :load="load"
-              :layout="layout"
-              :listData="weeklyList.data"></imageList>
-        </view>
-      </keep-alive>
-      <keep-alive>
-        <view class="list_container"
-              v-if="activeSector === 'monthlyList'">
-          <imageList
-              @image-cilck="navImageDetail"
-              :mark="activeSector"
-              :load="load"
-              :layout="layout"
-              :listData="monthlyList.data"></imageList>
-        </view>
-      </keep-alive>
-      <!-- #endif -->
     </view>
 
     <!--侧边栏-->
@@ -145,9 +101,9 @@ export default {
   data() {
     return {
       activeSector: '',//当前展示的类型
-      dailyList: {data: [], pn: 1, flowFloor:[0,0],floor: [0, 0], layer: 1},
-      weeklyList: {data: [], pn: 1, flowFloor:[0,0],floor: [0, 0], layer: 1},
-      monthlyList: {data: [], pn: 1, flowFloor:[0,0],floor: [0, 0], layer: 1},
+      dailyList: {data: [], pn: 1, flowFloor: [0, 0], floor: [0, 0], layer: 1},
+      weeklyList: {data: [], pn: 1, flowFloor: [0, 0], floor: [0, 0], layer: 1},
+      monthlyList: {data: [], pn: 1, flowFloor: [0, 0], floor: [0, 0], layer: 1},
       currentSector: {},//当前展示的数据
       isSideBar: false
     }
@@ -271,7 +227,7 @@ export default {
     handlerFloor(direction) {
       this.scrolling = true;
       let rollingDistance = 0,
-          currentFloor = this.layout==='flow'?this.currentSector.flowFloor:this.currentSector.floor;
+          currentFloor = this.layout === 'flow' ? this.currentSector.flowFloor : this.currentSector.floor;
       switch (direction) {
         case 'top': {
           this.currentSector.layer = 1;
@@ -312,28 +268,21 @@ export default {
 
     /*获取楼层导航所需的布局信息*/
     async getFloorLayout() {
-      if(this.layout === 'flow') return;
-      setTimeout(async ()=>{
+      if (this.layout === 'flow') return;
+      this.$nextTick(async () => {
         // if(this.currentSector.pn-1  === 1) return;
-
-        /* #ifndef MP */
-        this.listContainerLayout = await this.$componentStyle('.image_layout');
-        /* #endif */
-
-        /* #ifdef MP*/
         this.listContainerLayout = await this.$componentStyle('.pixiv_list');
-        /* #endif*/
-
-        this.currentSector.floor.push(Math.abs(this.listContainerLayout.height))
-      },1000)
+        let result = Math.abs(this.listContainerLayout.height)
+        this.currentSector.floor.indexOf(result) === -1 && this.currentSector.floor.push(result)
+      })
     },
 
     /*跳转图片详情*/
     navImageDetail(img) {
     },
 
-    computeFloor(){
-       this.$nextTick(() => {
+    computeFloor() {
+      this.$nextTick(() => {
         /*
         * rule布局
         * 每一张图片的高度都是相等的，
@@ -341,48 +290,40 @@ export default {
         * 图片的高度 * 每一页图片的数量  + 图片的margin * 每一页图片的数量 = 楼层位置
         * 楼层位置 * 楼层页数 = 所有的楼层位置
         *
-        * flow布局
-        * 无法推测两侧数量，在imageList组件分割数据的时候
-        * 记录左侧每一页的数量，循环获取每一页最后一张图片
-        * 和容器的相关位置信息，会影响性能
-        * 容器Top - 最后一张图片的Top + 最后一张图片的Height + 图片margin = 楼层位置
-        *
-        * 可以将不同布局模式下的楼层信息分开存储，
-        * 可以降低布局切换时计算楼层信息所需的时间
-        * 后续优化时再做处理
-        *
         * 需要注意各个平台获取组件信息的差异性
         * */
         this.currentSector.floor = [0, 0]
-         let loopCount = 1,
-             floorDivide = 0,
-             lastImg = this.currentSector.data.length / 2,
-             numberPerPage = this.currentSector.data.length / (this.currentSector.pn - 1) / 2;
-         if (this.layout === 'rule') {
-           Promise.all([
-             /* #ifdef MP*/
-             this.$componentStyle('.pixiv_list >>> .' + this.activeSector + (lastImg - 1)),
-             /* #endif*/
-             /* #ifndef MP*/
-             this.$componentStyle('.' + this.activeSector + (lastImg - 1)),
-             /* #endif*/
-             this.$componentStyle('.pixiv_list')
-           ]).then(location => {
-             floorDivide = (location[0].height * numberPerPage) + ((location[1].bottom - location[0].bottom) * numberPerPage)
-             do {
-               this.currentSector.floor.push(floorDivide * loopCount)
-               loopCount++;
-             } while (loopCount !== this.currentSector.pn)
-           })
-         }
-       })
+        let loopCount = 1,
+            floorDivide = 0,
+            lastImg = this.currentSector.data.length / 2,
+            numberPerPage = this.currentSector.data.length / (this.currentSector.pn - 1) / 2,
+        result = 0;
+        if (this.layout === 'rule') {
+          Promise.all([
+            /* #ifdef MP*/
+            this.$componentStyle('.pixiv_list >>> .' + this.activeSector + (lastImg - 1)),
+            /* #endif*/
+            /* #ifndef MP*/
+            this.$componentStyle('.' + this.activeSector + (lastImg - 1)),
+            /* #endif*/
+            this.$componentStyle('.pixiv_list')
+          ]).then(location => {
+            floorDivide = (location[0].height * numberPerPage) + ((location[1].bottom - location[0].bottom) * numberPerPage)
+            do {
+              result = floorDivide * loopCount;
+              this.currentSector.floor.indexOf(result) === -1 &&this.currentSector.floor.push(result)
+              loopCount++;
+            } while (loopCount !== this.currentSector.pn)
+          })
+        }
+      })
     }
   },
   watch: {
     /*监视活跃的板块，并修改相应的数据*/
     async activeSector() {
       this.currentSector = this[this.activeSector];
-      if (this.currentSector.data.length === 0) {
+      if (this.currentSector.data.length === 0 && !this.loading) {
         this[this.activeSector].data = await this.requestHomeData()
         this.currentSector = this[this.activeSector];
         this.$nextTick(async () => {
@@ -393,7 +334,7 @@ export default {
     floor(is) {
       is && this.computeFloor()
     },
-    layout(l){
+    layout(l) {
       l === 'rule' && this.computeFloor()
     }
   },
@@ -405,126 +346,126 @@ export default {
 
 <style scoped lang="scss">
 image{
-    width: 0;
-    height: 0;
-    vertical-align: middle;
+  width: 0;
+  height: 0;
+  vertical-align: middle;
 }
 
 .pixiv {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  .pixiv_head {
     width: 100%;
-    height: 100%;
+    height: $head-h * 2;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: #fff;
+    z-index: 1;
 
-    .pixiv_head {
-        width: 100%;
-        height: $head-h * 2;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        position: fixed;
-        top: 0;
-        left: 0;
-        background: #fff;
-        z-index: 1;
+    .head {
+      width: 100%;
+      height: $head-h;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      font-size: $f-s-base;
 
-        .head {
-            width: 100%;
-            height: $head-h;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            font-size: $f-s-base;
+      .head1 {
+        flex: 1;
+        height: $head-h;
+        text-align: center;
+        line-height: $head-h;
 
-            .head1 {
-                flex: 1;
-                height: $head-h;
-                text-align: center;
-                line-height: $head-h;
-
-                image {
-                    width: $svg-size;
-                    height: $svg-size;
-                    vertical-align: middle;
-                }
-
-                &.head_index {
-                    image {
-                        width: $svg-size + 40rpx;
-                        height: $svg-size + 40rpx;
-                    }
-                }
-            }
-
-            .rank {
-                flex: 1;
-                height: $head-h;
-                text-align: center;
-                line-height: $head-h;
-                box-sizing: border-box;
-
-                &.active_sector {
-                    border-bottom: 1rpx solid $main-color;
-                    color: $main-color;
-                }
-            }
+        image {
+          width: $svg-size;
+          height: $svg-size;
+          vertical-align: middle;
         }
+
+        &.head_index {
+          image {
+            width: $svg-size + 40rpx;
+            height: $svg-size + 40rpx;
+          }
+        }
+      }
+
+      .rank {
+        flex: 1;
+        height: $head-h;
+        text-align: center;
+        line-height: $head-h;
+        box-sizing: border-box;
+
+        &.active_sector {
+          border-bottom: 1rpx solid $main-color;
+          color: $main-color;
+        }
+      }
+    }
+  }
+
+  .pixiv_list {
+    width:100%;
+    margin-top: $head-h * 2 + 10rpx;
+
+    .list_container {
+      width: 100vw;
+      flex-shrink: 0;
+    }
+  }
+
+  .pixiv_floor{
+    width:80rpx;
+    height: 400rpx;
+    position: fixed;
+    bottom: 20rpx;
+    right: 20rpx;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1;
+    background:rgba(0,0,0,.5);
+    border-radius: 10rpx;
+    color: #FFFFFF;
+    font-size: $f-s-bg;
+
+    .floor_slide{
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 4rpx solid $main-color;
+      box-sizing: border-box;
+      border-radius: 10rpx;
+
+      image{
+        width: $svg-size + 10rpx;
+        height: $svg-size + 10rpx;
+      }
     }
 
-    .pixiv_list {
-        width:100%;
-        margin-top: $head-h * 2 + 10rpx;
-
-        .list_container {
-            width: 100vw;
-            flex-shrink: 0;
-        }
+    .floor_count{
+      background: rgba(46, 200, 205,.3);
+      border-radius: 50%;
+      border: none;
     }
 
-    .pixiv_floor{
-        width:80rpx;
-        height: 400rpx;
-        position: fixed;
-        bottom: 20rpx;
-        right: 20rpx;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        z-index: 1;
-        background:rgba(0,0,0,.5);
-        border-radius: 10rpx;
-        color: #FFFFFF;
-        font-size: $f-s-bg;
-
-        .floor_slide{
-            flex: 1;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-top: 4rpx solid $main-color;
-            box-sizing: border-box;
-            border-radius: 10rpx;
-
-            image{
-                width: $svg-size + 10rpx;
-                height: $svg-size + 10rpx;
-            }
-        }
-
-        .floor_count{
-            background: rgba(46, 200, 205,.3);
-            border-radius: 50%;
-            border: none;
-        }
-
-        .floor_bottom,.floor_down{
-            border-top: none;
-            border-bottom: 4rpx solid $main-color;
-        }
+    .floor_bottom,.floor_down{
+      border-top: none;
+      border-bottom: 4rpx solid $main-color;
     }
+  }
 }
 
 /*侧边栏的过度动画*/

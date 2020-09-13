@@ -92,14 +92,14 @@ export default {
          * 同时图片的SRC地址可能需要更改
          * */
         img.layoutHeight = img.height / (img.width / (this.windowWidth * 0.45))
-        if (this.leftH > this.rightH) {
+        if (this.leftH >= this.rightH) {
           this.rightH += parseFloat(img.layoutHeight);
-          this.left.push(img)
-          this.flowLeft.push(img)
-        } else {
-          this.leftH += parseFloat(img.layoutHeight);
           this.right.push(img)
           this.flowRight.push(img)
+        } else {
+          this.leftH += parseFloat(img.layoutHeight);
+          this.left.push(img)
+          this.flowLeft.push(img)
         }
       })
        // this.flowLeft = this.left;
@@ -175,7 +175,7 @@ export default {
       handler: function () {
         this.$nextTick(async () => {
           if (!getApp().globalData.imgMargin) {
-            let i = this.layout === 'flow' ? this.flowLeft.length : this.left.length
+            let i = this.layout === 'flow' ? (this.leftH >= this.rightH ? this.flowLeft.length : this.flowRight.length) : this.left.length
             await Promise.all([
               this.$componentStyle('.pixiv_list'),
               /* #ifdef MP*/
@@ -187,10 +187,11 @@ export default {
             ]).then(location => {
               this.imgMargin = location[0].bottom - location[1].bottom;
               getApp().globalData.imgMargin = this.imgMargin;
+              console.log(this.imgMargin);
             })
           }
           let parentFloor = this.$parent.currentSector || this.$root.currentSector;
-          parentFloor.flowFloor.push(this.leftH + this.left.length *this.imgMargin)
+          parentFloor.flowFloor.push(this.leftH + this.left.length * this.imgMargin)
         })
       },
       deep: true
